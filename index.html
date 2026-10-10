@@ -2573,19 +2573,22 @@
       }
 
       function toggleMusic() {
-        const isPlaying = document.body.dataset.music === "playing";
-        if (isPlaying) {
-          pauseMusic();
-          return;
-        }
+  const isPlaying = document.body.dataset.music === "playing";
 
-        if (activeMusicMode === "upload") {
-          startUploadedMusic();
-        } else {
-          startBuiltInMusic();
-        }
-      }
+  if (isPlaying) {
+    pauseMusic();
+    return;
+  }
 
+  const uploadedAudio = document.querySelector("#uploadedAudio");
+
+  if (uploadedAudio && uploadedAudio.getAttribute("src")) {
+    activeMusicMode = "upload";
+    startUploadedMusic();
+  } else {
+    startBuiltInMusic();
+  }
+}
       function wireMusicControls() {
         const toggle = $("#musicToggle");
         const stop = $("#musicStop");
