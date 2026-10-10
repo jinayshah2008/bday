@@ -1939,7 +1939,7 @@ window.RETRO_BIRTHDAY_SUPABASE_ANON_KEY =
               "apikey": supabaseConfig.anonKey,
               "Authorization": `Bearer ${supabaseConfig.anonKey}`
             },
-            body: JSON.stringify({ event_type: eventType, ...details })
+            body: JSON.stringify({ eventType, details })
           });
           if (!response.ok) {
             const body = await response.text();
