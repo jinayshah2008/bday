@@ -1742,6 +1742,8 @@
                   bhavya ?? 
                   and like if 10 me se 2 are destroyed it dosent mean u ruined it 
                 </p>
+                <button class="pill-button" id="readConfirmButton" type="button">I've read this ❤️</button>
+                <p class="form-status" id="readConfirmStatus" role="status" aria-live="polite"></p>
               </div>
             </div>
           </div>
@@ -1927,6 +1929,30 @@ window.RETRO_BIRTHDAY_SUPABASE_ANON_KEY =
       let supabaseClient = null;
       let guestbookCloudReady = false;
 
+      // Notifications are sent by a Supabase Edge Function; email secrets stay server-side.
+      async function sendOwnerNotification(eventType, details = {}) {
+        try {
+          const response = await fetch(`${supabaseConfig.url}/functions/v1/birthday-notify`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": supabaseConfig.anonKey,
+              "Authorization": `Bearer ${supabaseConfig.anonKey}`
+            },
+            body: JSON.stringify({ event_type: eventType, ...details })
+          });
+          if (!response.ok) {
+            const body = await response.text();
+            console.error("Birthday notification failed:", response.status, body);
+            return false;
+          }
+          return true;
+        } catch (error) {
+          console.error("Could not send birthday notification:", error);
+          return false;
+        }
+      }
+
       function initSupabaseClient() {
         const configured = supabaseConfig.url &&
           supabaseConfig.anonKey &&
@@ -1980,6 +2006,8 @@ window.RETRO_BIRTHDAY_SUPABASE_ANON_KEY =
             .from("birthday_guestbook")
             .insert({ name, message });
           if (error) throw error;
+          // Notify after the database insert succeeds; don't block saving the wish if email fails.
+          void sendOwnerNotification("guestbook_message", { name, message, page: window.location.href });
           await loadCloudGuestbook();
           if (status) status.textContent = "Signed! Your wish is now saved for everyone to see.";
           return true;
@@ -2109,9 +2137,13 @@ window.RETRO_BIRTHDAY_SUPABASE_ANON_KEY =
         const stage = button ? button.closest(".gift-stage") : null;
         if (!button || !message || !stage) return false;
 
+        const wasOpen = button.getAttribute("aria-expanded") === "true";
         button.setAttribute("aria-expanded", "true");
         message.hidden = false;
         launchTinyBurst(stage);
+        if (!wasOpen) {
+          void sendOwnerNotification("gift_opened", { page: window.location.href });
+        }
         return true;
       }
 
@@ -2124,8 +2156,12 @@ window.RETRO_BIRTHDAY_SUPABASE_ANON_KEY =
         const answer = input.value.trim().toLowerCase();
         const accepted = ["jiya"];
         if (accepted.includes(answer)) {
+          const wasHidden = reveal.hidden;
           reveal.hidden = false;
           status.textContent = "Unlocked.";
+          if (wasHidden) {
+            void sendOwnerNotification("secret_opened", { page: window.location.href });
+          }
           return true;
         }
 
@@ -2725,6 +2761,20 @@ window.RETRO_BIRTHDAY_SUPABASE_ANON_KEY =
         const secretButton = $("#unlockSecret");
         const secretInput = $("#secretCode");
         const themeButton = $("#themeToggle");
+        const readConfirmButton = $("#readConfirmButton");
+        const readConfirmStatus = $("#readConfirmStatus");
+
+        if (readConfirmButton) {
+          readConfirmButton.addEventListener("click", async () => {
+            readConfirmButton.disabled = true;
+            readConfirmStatus.textContent = "Sending confirmation…";
+            const sent = await sendOwnerNotification("read_confirmed", { page: window.location.href });
+            readConfirmStatus.textContent = sent
+              ? "Thanks — confirmation sent."
+              : "Couldn't send confirmation right now. Please try again.";
+            readConfirmButton.disabled = false;
+          });
+        }
 
         applyTheme(getInitialTheme(), false);
 
