@@ -1,0 +1,2768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A lightweight retro birthday website with a gift reveal, secret message, and guestbook.">
+  <title>Happy Birthday, Sis</title>
+  <script>
+    (() => {
+      try {
+        const savedTheme = window.localStorage.getItem("retroBirthdayTheme");
+        const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        const theme = savedTheme || preferredTheme;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+      } catch (error) {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #201722;
+      --paper: #fff7df;
+      --paper-soft: #fff1bf;
+      --card: #fff7df;
+      --input-bg: #fffdf5;
+      --reveal-bg: #fffaf0;
+      --gift-stage-bg: #ffe8ef;
+      --coral: #ff6f61;
+      --teal: #16b7a4;
+      --blue: #3b5bdb;
+      --mustard: #f6c445;
+      --pink: #f8a5c2;
+      --mint: #a7f3d0;
+      --muted: #382f39;
+      --section-a: #fff2d0;
+      --section-b: #fdf8e8;
+      --kicker: #5a314f;
+      --status: #7a2446;
+      --entry-name: #3a2475;
+      --grid-line: rgba(32, 23, 34, 0.06);
+      --stage-grid: rgba(32, 23, 34, 0.08);
+      --scanline: rgba(255, 255, 255, 0.12);
+      --inset-shadow: rgba(32, 23, 34, 0.12);
+      --focus-ring: rgba(59, 91, 219, 0.16);
+      --hero-warm: rgba(255, 111, 97, 0.28);
+      --hero-cool: rgba(22, 183, 164, 0.24);
+      --cassette-shine: rgba(255, 255, 255, 0.38);
+      --shadow-color: var(--ink);
+      --footer-ink: var(--paper);
+      --shadow: 8px 8px 0 var(--shadow-color);
+      --radius: 8px;
+      --max: 1120px;
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #fff4dc;
+      --paper: #16111f;
+      --paper-soft: #241a31;
+      --card: #21182b;
+      --input-bg: #120d19;
+      --reveal-bg: #261b32;
+      --gift-stage-bg: #2c1830;
+      --coral: #ff7b6d;
+      --teal: #38d7c2;
+      --blue: #8da2ff;
+      --mustard: #ffd15d;
+      --pink: #ff9fc8;
+      --mint: #73ddb7;
+      --muted: #eadfca;
+      --section-a: #1d1627;
+      --section-b: #120d19;
+      --kicker: #ffd15d;
+      --status: #ffb5d3;
+      --entry-name: #9fb0ff;
+      --grid-line: rgba(255, 244, 220, 0.07);
+      --stage-grid: rgba(255, 244, 220, 0.08);
+      --scanline: rgba(255, 244, 220, 0.09);
+      --inset-shadow: rgba(0, 0, 0, 0.35);
+      --focus-ring: rgba(141, 162, 255, 0.22);
+      --hero-warm: rgba(255, 123, 109, 0.2);
+      --hero-cool: rgba(56, 215, 194, 0.16);
+      --cassette-shine: rgba(255, 244, 220, 0.18);
+      --shadow-color: #05030a;
+      --footer-ink: #16111f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Trebuchet MS", Verdana, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      letter-spacing: 0;
+      background:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+        var(--paper);
+      background-size: 22px 22px;
+      overflow-x: hidden;
+      transition: background-color 180ms ease, color 180ms ease;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        var(--scanline),
+        var(--scanline) 1px,
+        transparent 1px,
+        transparent 5px
+      );
+      mix-blend-mode: soft-light;
+      z-index: 20;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .page-shell {
+      min-height: 100vh;
+    }
+
+    .flower-fall {
+      position: fixed;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .flower {
+      --petal-a: #ffe4ec;
+      --petal-b: #ff8fb8;
+      --petal-c: #ffc7da;
+      --center: #f6c445;
+      --stem: #49b47e;
+      position: absolute;
+      top: -14vh;
+      left: var(--left);
+      width: var(--size);
+      height: var(--size);
+      background: transparent;
+      opacity: 0.86;
+      filter: drop-shadow(0 2px 1px rgba(32, 23, 34, 0.18));
+      animation: flowerFall var(--duration) linear infinite;
+      animation-delay: var(--delay);
+      transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+
+    .flower::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse 28% 44% at 50% 7%, var(--petal-a) 0 64%, transparent 66%),
+        radial-gradient(ellipse 28% 44% at 50% 93%, var(--petal-b) 0 64%, transparent 66%),
+        radial-gradient(ellipse 44% 28% at 7% 50%, var(--petal-c) 0 64%, transparent 66%),
+        radial-gradient(ellipse 44% 28% at 93% 50%, var(--petal-a) 0 64%, transparent 66%),
+        radial-gradient(ellipse 27% 42% at 24% 23%, var(--petal-b) 0 60%, transparent 62%),
+        radial-gradient(ellipse 27% 42% at 76% 23%, var(--petal-c) 0 60%, transparent 62%),
+        radial-gradient(ellipse 27% 42% at 24% 77%, var(--petal-a) 0 60%, transparent 62%),
+        radial-gradient(ellipse 27% 42% at 76% 77%, var(--petal-b) 0 60%, transparent 62%),
+        radial-gradient(circle at 50% 50%, var(--center) 0 15%, #8a5629 16% 20%, transparent 21%);
+    }
+
+    .flower::after {
+      content: "";
+      position: absolute;
+      left: 58%;
+      top: 62%;
+      width: 54%;
+      height: 12%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--stem), transparent);
+      transform: rotate(35deg);
+      transform-origin: left center;
+      opacity: 0.72;
+    }
+
+    .flower:nth-child(3n) {
+      --petal-a: #fff6d8;
+      --petal-b: #fff0a8;
+      --petal-c: #ffe98a;
+      --center: #b46a2a;
+    }
+
+    .flower:nth-child(4n) {
+      --petal-a: #f4e0ff;
+      --petal-b: #cfa4ff;
+      --petal-c: #ffcae4;
+      --center: #ffd15d;
+    }
+
+    .flower:nth-child(5n) {
+      --petal-a: #fff7f7;
+      --petal-b: #ffc1d5;
+      --petal-c: #ff8fa8;
+      --center: #f6c445;
+    }
+
+    @keyframes flowerFall {
+      0% {
+        transform: translate3d(0, -12vh, 0) rotate(-24deg);
+      }
+
+      50% {
+        transform: translate3d(calc(var(--drift) * 0.45), 52vh, 0) rotate(140deg);
+      }
+
+      100% {
+        transform: translate3d(var(--drift), 118vh, 0) rotate(330deg);
+      }
+    }
+
+    .hero {
+      min-height: 86vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      background:
+        linear-gradient(135deg, var(--hero-warm), transparent 32%),
+        linear-gradient(225deg, var(--hero-cool), transparent 32%),
+        var(--paper);
+      border-bottom: 4px solid var(--ink);
+    }
+
+    .topbar,
+    .hero-inner,
+    .band-inner {
+      width: min(100%, var(--max));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: inline-grid;
+      place-items: center;
+      color: var(--paper);
+      background: var(--ink);
+      border: 2px solid var(--ink);
+      box-shadow: 4px 4px 0 var(--coral);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav-links a,
+    .pill-button,
+    .secondary-button,
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 10px 14px;
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 800;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--paper-soft);
+      box-shadow: 4px 4px 0 var(--shadow-color);
+      transition: transform 160ms ease, box-shadow 160ms ease, background-color 180ms ease, color 180ms ease;
+    }
+
+    .nav-links a:hover,
+    .pill-button:hover,
+    .secondary-button:hover,
+    .theme-toggle:hover {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--shadow-color);
+    }
+
+    .theme-toggle {
+      gap: 8px;
+      min-width: 120px;
+      background: var(--mint);
+    }
+
+    .theme-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      position: relative;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--mustard);
+      box-shadow: inset -5px -3px 0 var(--coral);
+    }
+
+    :root[data-theme="dark"] .theme-icon {
+      background: var(--blue);
+      box-shadow: inset 6px -2px 0 var(--paper);
+    }
+
+    .hero-inner {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(300px, 0.78fr);
+      gap: 42px;
+      align-items: center;
+      padding: 28px 0 44px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 18px;
+      padding: 8px 12px;
+      color: var(--ink);
+      background: var(--mint);
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      font-weight: 800;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      background: var(--coral);
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      max-width: 780px;
+      margin-bottom: 18px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 4.6rem;
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      max-width: 690px;
+      margin-bottom: 26px;
+      font-size: 1.15rem;
+      color: var(--muted);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pill-button {
+      background: var(--mustard);
+    }
+
+    .secondary-button {
+      background: var(--paper);
+    }
+
+    .retro-visual {
+      display: grid;
+      gap: 18px;
+      justify-items: center;
+      align-self: stretch;
+      align-content: center;
+    }
+
+    .cassette {
+      width: min(100%, 390px);
+      aspect-ratio: 1.38 / 1;
+      position: relative;
+      padding: 26px;
+      border: 4px solid var(--ink);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, transparent 0 12%, var(--cassette-shine) 12% 15%, transparent 15% 100%),
+        linear-gradient(135deg, var(--teal), var(--blue));
+      box-shadow: var(--shadow);
+    }
+
+    .cassette::before,
+    .cassette::after {
+      content: "";
+      position: absolute;
+      top: 42%;
+      width: 92px;
+      height: 92px;
+      border: 10px solid var(--paper);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, var(--ink) 0 9px, transparent 10px),
+        repeating-conic-gradient(var(--paper) 0 12deg, var(--ink) 12deg 17deg);
+      box-shadow: 0 0 0 4px var(--ink);
+    }
+
+    .cassette::before {
+      left: 42px;
+    }
+
+    .cassette::after {
+      right: 42px;
+    }
+
+    .cassette-label {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      min-height: 72px;
+      padding: 10px;
+      text-align: center;
+      font-weight: 900;
+      background: var(--paper);
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+    }
+
+    .cassette-window {
+      position: absolute;
+      left: 50%;
+      bottom: 28px;
+      width: 116px;
+      height: 32px;
+      transform: translateX(-50%);
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      background: var(--paper-soft);
+    }
+
+    .equalizer {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 6px;
+      width: min(100%, 390px);
+      min-height: 86px;
+      align-items: end;
+      padding: 14px;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--paper-soft);
+      box-shadow: 6px 6px 0 var(--shadow-color);
+    }
+
+    .equalizer span {
+      display: block;
+      min-height: 14px;
+      border: 2px solid var(--ink);
+      background: var(--coral);
+      animation: bounce 1.6s ease-in-out infinite;
+      animation-delay: calc(var(--i) * 80ms);
+    }
+
+    body:not([data-music="playing"]) .equalizer span {
+      animation-play-state: paused;
+    }
+
+    .equalizer span:nth-child(3n) {
+      background: var(--teal);
+    }
+
+    .equalizer span:nth-child(4n) {
+      background: var(--mustard);
+    }
+
+    @keyframes bounce {
+      0%,
+      100% {
+        height: 24px;
+      }
+
+      50% {
+        height: 72px;
+      }
+    }
+
+    .music-deck {
+      width: min(100%, 390px);
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: 6px 6px 0 var(--shadow-color);
+    }
+
+    .music-topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+    }
+
+    .music-light {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--status);
+    }
+
+    body[data-music="playing"] .music-light {
+      background: var(--mint);
+      box-shadow: 0 0 0 4px rgba(115, 221, 183, 0.24);
+    }
+
+    .music-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .music-volume {
+      display: grid;
+      gap: 4px;
+      font-weight: 900;
+      min-width: min(100%, 180px);
+      flex: 1;
+    }
+
+    .music-volume input {
+      padding: 0;
+      height: 22px;
+      border: 0;
+      box-shadow: none;
+      accent-color: var(--coral);
+      background: transparent;
+    }
+
+    .music-status {
+      margin: 0;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .band {
+      padding: 70px 24px;
+      border-bottom: 4px solid var(--ink);
+    }
+
+    .band:nth-of-type(odd) {
+      background: var(--section-a);
+    }
+
+    .band:nth-of-type(even) {
+      background: var(--section-b);
+    }
+
+    .section-kicker {
+      margin-bottom: 8px;
+      font-weight: 900;
+      color: var(--kicker);
+    }
+
+    h2 {
+      margin-bottom: 16px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 2.4rem;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .section-lead {
+      max-width: 720px;
+      margin-bottom: 28px;
+      color: var(--muted);
+    }
+
+    .track-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .track {
+      min-height: 184px;
+      padding: 20px;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: 6px 6px 0 var(--shadow-color);
+    }
+
+    .track strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    .letter-stack {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .main-letter {
+      position: relative;
+      margin: 0 0 26px;
+      padding: 34px 34px 30px;
+      border: 4px solid var(--ink);
+      border-radius: var(--radius);
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0 30px,
+          var(--stage-grid) 31px,
+          transparent 32px
+        ),
+        var(--card);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .main-letter::before {
+      content: "";
+      position: absolute;
+      inset: 18px auto 18px 24px;
+      width: 4px;
+      background: var(--coral);
+      border-radius: 999px;
+      opacity: 0.72;
+    }
+
+    .main-letter::after {
+      content: "";
+      position: absolute;
+      right: 26px;
+      top: 24px;
+      width: 84px;
+      height: 62px;
+      border: 3px solid var(--ink);
+      background:
+        linear-gradient(135deg, transparent 0 48%, var(--ink) 49% 51%, transparent 52%),
+        var(--mint);
+      transform: rotate(4deg);
+      box-shadow: 4px 4px 0 var(--shadow-color);
+    }
+
+    .main-letter h3,
+    .main-letter p,
+    .main-letter .letter-signoff {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+    }
+
+    .main-letter h3 {
+      margin-bottom: 14px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.8rem;
+      line-height: 1.1;
+    }
+
+    .main-letter p {
+      margin-bottom: 14px;
+      font-size: 1.06rem;
+      color: var(--muted);
+    }
+
+    .letter-signoff {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 8px 12px;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--mustard);
+      font-weight: 900;
+      transform: rotate(-1deg);
+    }
+
+    .letter-card {
+      min-height: 254px;
+      position: relative;
+      padding: 26px 22px 22px;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, transparent 0 48%, var(--paper-soft) 49% 52%, transparent 53%),
+        var(--card);
+      box-shadow: 7px 7px 0 var(--shadow-color);
+      overflow: hidden;
+    }
+
+    .letter-card:nth-child(2) {
+      transform: rotate(-1deg);
+    }
+
+    .letter-card:nth-child(3) {
+      transform: rotate(1deg);
+    }
+
+    .letter-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(35deg, transparent 0 49%, rgba(32, 23, 34, 0.12) 50%, transparent 51%),
+        linear-gradient(-35deg, transparent 0 49%, rgba(32, 23, 34, 0.12) 50%, transparent 51%);
+      pointer-events: none;
+    }
+
+    :root[data-theme="dark"] .letter-card::before {
+      background:
+        linear-gradient(35deg, transparent 0 49%, rgba(255, 244, 220, 0.08) 50%, transparent 51%),
+        linear-gradient(-35deg, transparent 0 49%, rgba(255, 244, 220, 0.08) 50%, transparent 51%);
+    }
+
+    .letter-card h3,
+    .letter-card p {
+      position: relative;
+      z-index: 1;
+    }
+
+    .letter-stamp {
+      width: 58px;
+      height: 46px;
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: grid;
+      place-items: center;
+      border: 2px dashed var(--ink);
+      background: var(--mint);
+      font-weight: 900;
+      transform: rotate(5deg);
+    }
+
+    .letter-seal {
+      width: 42px;
+      height: 42px;
+      position: absolute;
+      right: 24px;
+      bottom: 18px;
+      border: 3px solid var(--ink);
+      border-radius: 50%;
+      background: var(--coral);
+      box-shadow: 4px 4px 0 var(--shadow-color);
+    }
+
+    .memory-board {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .photo-collage {
+      min-height: 520px;
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-auto-rows: 82px;
+      gap: 14px;
+      padding: 18px;
+      border: 4px solid var(--ink);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, var(--stage-grid) 1px, transparent 1px),
+        linear-gradient(var(--stage-grid) 1px, transparent 1px),
+        var(--paper-soft);
+      background-size: 18px 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .collage-frame {
+      position: relative;
+      min-width: 0;
+      padding: 10px 10px 34px;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: 5px 5px 0 var(--shadow-color);
+      overflow: hidden;
+      transform: rotate(var(--tilt, 0deg));
+    }
+
+    .collage-frame:nth-child(1) {
+      grid-column: span 3;
+      grid-row: span 3;
+      --tilt: -2deg;
+    }
+
+    .collage-frame:nth-child(2) {
+      grid-column: span 3;
+      grid-row: span 2;
+      --tilt: 2deg;
+    }
+
+    .collage-frame:nth-child(3) {
+      grid-column: span 2;
+      grid-row: span 3;
+      --tilt: 1deg;
+    }
+
+    .collage-frame:nth-child(4) {
+      grid-column: span 4;
+      grid-row: span 3;
+      --tilt: -1deg;
+    }
+
+    .collage-frame img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      border: 2px solid var(--ink);
+      border-radius: 4px;
+      background: var(--paper);
+    }
+
+    .collage-frame button {
+      width: 100%;
+      height: 100%;
+      display: block;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+    }
+
+    .collage-caption {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 7px;
+      font-weight: 900;
+      font-size: 0.86rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .collage-frame.video::after {
+      content: "PLAY";
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      padding: 5px 8px;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--mustard);
+      color: var(--ink);
+      font-size: 0.76rem;
+      font-weight: 900;
+    }
+
+    .media-control-panel {
+      padding: 22px;
+      border: 4px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: 7px 7px 0 var(--shadow-color);
+    }
+
+    .media-actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .file-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .media-dropdown {
+      margin-top: 18px;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--paper-soft);
+      box-shadow: 5px 5px 0 var(--shadow-color);
+    }
+
+    .media-dropdown summary {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .media-dropdown summary::after {
+      content: "+";
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--mustard);
+    }
+
+    .media-dropdown[open] summary::after {
+      content: "-";
+    }
+
+    .media-menu-list {
+      display: grid;
+      gap: 10px;
+      padding: 0 14px 14px;
+    }
+
+    .media-item {
+      display: grid;
+      grid-template-columns: 64px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 10px;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--input-bg);
+    }
+
+    .media-thumb {
+      width: 64px;
+      height: 54px;
+      border: 2px solid var(--ink);
+      border-radius: 4px;
+      object-fit: cover;
+      background: var(--paper);
+    }
+
+    .media-copy strong,
+    .media-copy span {
+      display: block;
+    }
+
+    .media-copy span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .media-item-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .mini-button {
+      min-height: 34px;
+      padding: 6px 10px;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--mint);
+      color: var(--ink);
+      font-weight: 900;
+      box-shadow: 3px 3px 0 var(--shadow-color);
+      text-decoration: none;
+    }
+
+    .media-viewer {
+      width: min(92vw, 820px);
+      border: 4px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 0;
+      color: var(--ink);
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .media-viewer::backdrop {
+      background: rgba(0, 0, 0, 0.58);
+    }
+
+    .viewer-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 3px solid var(--ink);
+      background: var(--paper-soft);
+    }
+
+    .viewer-topline h3 {
+      margin-bottom: 0;
+    }
+
+    .viewer-body {
+      padding: 16px;
+    }
+
+    .viewer-body img,
+    .viewer-body video {
+      width: 100%;
+      max-height: 68vh;
+      display: block;
+      object-fit: contain;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+
+    .viewer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .tool-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(300px, 1.1fr);
+      gap: 28px;
+      align-items: center;
+      padding: 28px;
+      border: 4px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .gift-stage {
+      display: grid;
+      place-items: center;
+      min-height: 320px;
+      position: relative;
+      overflow: hidden;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, var(--stage-grid) 1px, transparent 1px),
+        linear-gradient(var(--stage-grid) 1px, transparent 1px),
+        var(--gift-stage-bg);
+      background-size: 18px 18px;
+    }
+
+    .gift-button {
+      width: min(240px, 82vw);
+      min-height: 220px;
+      position: relative;
+      border: 0;
+      background: transparent;
+      padding: 0;
+    }
+
+    .gift-lid,
+    .gift-box,
+    .gift-ribbon,
+    .gift-knot {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid var(--ink);
+      border-radius: var(--radius);
+    }
+
+    .gift-lid {
+      top: 34px;
+      width: 210px;
+      height: 52px;
+      background: var(--mustard);
+      transition: transform 260ms ease;
+      z-index: 2;
+    }
+
+    .gift-box {
+      bottom: 24px;
+      width: 190px;
+      height: 128px;
+      background: var(--coral);
+      box-shadow: 8px 8px 0 var(--shadow-color);
+    }
+
+    .gift-ribbon {
+      bottom: 24px;
+      width: 46px;
+      height: 128px;
+      background: var(--teal);
+      border-top: 0;
+      border-bottom: 0;
+      border-radius: 0;
+      z-index: 1;
+    }
+
+    .gift-knot {
+      top: 8px;
+      width: 74px;
+      height: 42px;
+      background: var(--pink);
+      border-radius: 999px 999px 6px 6px;
+      z-index: 3;
+    }
+
+    .gift-button[aria-expanded="true"] .gift-lid {
+      transform: translate(-50%, -30px) rotate(-8deg);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .reveal-card {
+      padding: 22px;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--reveal-bg);
+    }
+
+    .reveal-card[hidden] {
+      display: none;
+    }
+
+    .gift-note {
+      margin: 0;
+      font-size: 1.12rem;
+    }
+
+    .burst {
+      position: absolute;
+      left: 50%;
+      top: 47%;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
+    }
+
+    .burst span {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--ink);
+      background: var(--burst-color);
+      transform: rotate(var(--angle)) translateY(-16px);
+      animation: pop 760ms ease-out forwards;
+    }
+
+    @keyframes pop {
+      to {
+        transform: rotate(var(--angle)) translateY(-118px) rotate(90deg);
+        opacity: 0;
+      }
+    }
+
+    .secret-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+      margin-top: 18px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      font-weight: 800;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--input-bg);
+      color: var(--ink);
+      padding: 12px 14px;
+      outline: none;
+      box-shadow: inset 3px 3px 0 var(--inset-shadow);
+    }
+
+    textarea {
+      min-height: 118px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px var(--focus-ring), inset 3px 3px 0 var(--inset-shadow);
+    }
+
+    .secret-reveal {
+      margin-top: 18px;
+      padding: 18px;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--mint);
+      color: var(--ink);
+      box-shadow: 5px 5px 0 var(--shadow-color);
+    }
+
+    .secret-reveal[hidden],
+    .form-status:empty {
+      display: none;
+    }
+
+    .form-status {
+      margin: 12px 0 0;
+      font-weight: 800;
+      color: var(--status);
+    }
+
+    .guestbook-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.18fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .guestbook-form,
+    .guestbook-feed {
+      padding: 22px;
+      border: 4px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: 6px 6px 0 var(--shadow-color);
+    }
+
+    .guestbook-form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .guestbook-topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      font-weight: 900;
+    }
+
+    .entry-count {
+      min-width: 42px;
+      min-height: 34px;
+      display: inline-grid;
+      place-items: center;
+      padding: 3px 9px;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--mustard);
+    }
+
+    .guestbook-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .guestbook-entry {
+      padding: 16px;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--input-bg);
+    }
+
+    .guestbook-entry strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--entry-name);
+    }
+
+    .guestbook-entry p {
+      margin-bottom: 0;
+    }
+
+    .site-footer {
+      padding: 30px 24px;
+      text-align: center;
+      color: var(--footer-ink);
+      background: var(--ink);
+    }
+
+    .site-footer p {
+      margin: 0;
+    }
+
+    @media (max-width: 860px) {
+      .hero {
+        min-height: auto;
+      }
+
+      .hero-inner,
+      .tool-panel,
+      .memory-board,
+      .guestbook-layout {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 3.1rem;
+      }
+
+      .track-list,
+      .letter-stack {
+        grid-template-columns: 1fr;
+      }
+
+      .retro-visual {
+        order: -1;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .hero,
+      .band {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .top-actions,
+      .nav-links {
+        justify-content: flex-start;
+      }
+
+      .theme-toggle {
+        min-width: 100%;
+      }
+
+      h1 {
+        font-size: 2.55rem;
+      }
+
+      h2 {
+        font-size: 2rem;
+      }
+
+      .tool-panel,
+      .guestbook-form,
+      .guestbook-feed {
+        padding: 18px;
+      }
+
+      .main-letter {
+        padding: 28px 20px 24px;
+      }
+
+      .main-letter::after {
+        width: 58px;
+        height: 42px;
+        right: 16px;
+        top: 16px;
+      }
+
+      .secret-form {
+        grid-template-columns: 1fr;
+      }
+
+      .cassette::before,
+      .cassette::after {
+        width: 68px;
+        height: 68px;
+      }
+
+      .cassette::before {
+        left: 28px;
+      }
+
+      .cassette::after {
+        right: 28px;
+      }
+
+      .photo-collage {
+        grid-template-columns: 1fr;
+        grid-auto-rows: 220px;
+        min-height: auto;
+      }
+
+      .collage-frame,
+      .collage-frame:nth-child(1),
+      .collage-frame:nth-child(2),
+      .collage-frame:nth-child(3),
+      .collage-frame:nth-child(4) {
+        grid-column: span 1;
+        grid-row: span 1;
+        transform: none;
+      }
+
+      .media-item {
+        grid-template-columns: 1fr;
+      }
+
+      .media-thumb {
+        width: 100%;
+        height: 140px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="flower-fall" aria-hidden="true">
+    <span class="flower" style="--left: 4%; --size: 18px; --duration: 13s; --delay: -1s; --drift: 38px"></span>
+    <span class="flower" style="--left: 12%; --size: 24px; --duration: 16s; --delay: -5s; --drift: -24px"></span>
+    <span class="flower" style="--left: 20%; --size: 16px; --duration: 12s; --delay: -8s; --drift: 32px"></span>
+    <span class="flower" style="--left: 29%; --size: 22px; --duration: 18s; --delay: -3s; --drift: -36px"></span>
+    <span class="flower" style="--left: 38%; --size: 18px; --duration: 14s; --delay: -10s; --drift: 28px"></span>
+    <span class="flower" style="--left: 47%; --size: 26px; --duration: 19s; --delay: -7s; --drift: -30px"></span>
+    <span class="flower" style="--left: 56%; --size: 17px; --duration: 13s; --delay: -4s; --drift: 22px"></span>
+    <span class="flower" style="--left: 64%; --size: 21px; --duration: 17s; --delay: -12s; --drift: -42px"></span>
+    <span class="flower" style="--left: 72%; --size: 16px; --duration: 12s; --delay: -6s; --drift: 30px"></span>
+    <span class="flower" style="--left: 81%; --size: 24px; --duration: 18s; --delay: -2s; --drift: -26px"></span>
+    <span class="flower" style="--left: 90%; --size: 18px; --duration: 15s; --delay: -9s; --drift: 20px"></span>
+    <span class="flower" style="--left: 96%; --size: 22px; --duration: 20s; --delay: -14s; --drift: -34px"></span>
+  </div>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="topbar">
+        <div class="brand" aria-label="Birthday home">
+          <span class="brand-mark" aria-hidden="true">&hearts;</span>
+          <span>Birthday Mix</span>
+        </div>
+        <div class="top-actions">
+          <nav class="nav-links" aria-label="Birthday sections">
+            <a href="#letters">Letters</a>
+            <a href="#memories">Memories</a>
+            <a href="#gift">Gift</a>
+            <a href="#secret">Secret</a>
+            <a href="#guestbook">Guestbook</a>
+          </nav>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
+            <span class="theme-icon" aria-hidden="true"></span>
+            <span id="themeToggleText">Dark</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-inner">
+        <div>
+          <p class="eyebrow">Retro birthday edition</p>
+          <h1>Happy Birthday, Sis.</h1>
+          <p class="hero-copy">
+            A little throwback corner of the internet for the person who makes ordinary days louder,
+            brighter, and impossible to forget.
+          </p>
+          <div class="hero-actions">
+            <a class="pill-button" href="#gift">Open the gift</a>
+            <a class="secondary-button" href="#memories">See memories</a>
+          </div>
+        </div>
+
+        <div class="retro-visual" aria-hidden="true">
+          <div class="cassette">
+            <div class="cassette-label">Side A: Best Sister Ever</div>
+            <div class="cassette-window"></div>
+          </div>
+          <div class="equalizer">
+            <span style="--i: 1"></span>
+            <span style="--i: 2"></span>
+            <span style="--i: 3"></span>
+            <span style="--i: 4"></span>
+            <span style="--i: 5"></span>
+            <span style="--i: 6"></span>
+            <span style="--i: 7"></span>
+            <span style="--i: 8"></span>
+            <span style="--i: 9"></span>
+            <span style="--i: 10"></span>
+            <span style="--i: 11"></span>
+            <span style="--i: 12"></span>
+          </div>
+          <div class="music-deck" aria-label="Birthday radio player">
+            <div class="music-topline">
+              <span>Birthday radio</span>
+              <span class="music-light" aria-hidden="true"></span>
+            </div>
+            <div class="music-controls">
+              <button class="pill-button" id="musicToggle" type="button" aria-pressed="false">Play music</button>
+              <button class="secondary-button" id="musicStop" type="button">Stop</button>
+              <label class="secondary-button" for="musicUpload">Load song</label>
+              <input class="file-input" id="musicUpload" type="file" accept="audio/*">
+            </div>
+            <label class="music-volume" for="musicVolume">
+              Volume
+              <input id="musicVolume" type="range" min="0" max="1" step="0.01" value="0.55">
+            </label>
+            <p class="music-status" id="musicStatus" role="status" aria-live="polite">
+              Birthday song loaded. Press play to start the radio.
+            </p>
+            <audio id="uploadedAudio" preload="metadata" loop src="assets/audio/birthday-song.mp3"></audio>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="band" aria-labelledby="playlist-title">
+        <div class="band-inner">
+          <p class="section-kicker">The day's playlist</p>
+          <h2 id="playlist-title">Three tiny records of why you are loved.</h2>
+          <p class="section-lead">
+            A smooth little birthday page with the good parts kept close and the mood turned all the way up.
+          </p>
+          <div class="track-list">
+            <article class="track">
+              <strong>Track 01 - Your laugh</strong>
+              <p>The sound that turns a regular room into the best place to be.</p>
+            </article>
+            <article class="track">
+              <strong>Track 02 - Your heart</strong>
+              <p>Soft when it matters, strong when it counts, and generous in ways people remember.</p>
+            </article>
+            <article class="track">
+              <strong>Track 03 - Your magic</strong>
+              <p>You make memories feel warmer just by being in them.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" id="letters" data-section="letters" aria-labelledby="letters-title">
+        <div class="band-inner">
+          <p class="section-kicker">Birthday letters</p>
+          <h2 id="letters-title">Three notes sealed for your day.</h2>
+          <p class="section-lead">
+            The same warm birthday message, now dressed like an old postcard stack.
+          </p>
+          <article class="main-letter" id="mainLetter">
+            <h3>My letter to you</h3>
+            <p>
+              Ooyee Happy bdayyyy you are the person that made me live and like you just were here 
+              and meko laga damn hamesha introvert nahi rahesakte 
+              damn like ukw mai aayush ke sath jitna extrovert hu na utna hi tere sath hu so u know u have earned that place 
+              like a special sister to me
+
+            </p>
+            <p>
+              You are the person who can make a normal day feel special without even trying. I hope
+              this year brings you gentle surprises, loud laughter, and hope no one hurts you 
+              and i am still your guys friend that gets to everything and nothing is hidden from me 
+            </p>
+            <p>
+              Dude love you a million like yoo u are 18 like damnnnn yayayayyayayayayyayayyy
+            </p>
+            <span class="letter-signoff">With love, always</span>
+          </article>
+          <div class="letter-stack">
+            <article class="letter-card">
+              <span class="letter-stamp">01</span>
+              <h3>Dear JIYANDOOOOOOO ,</h3>
+              <p>
+                You make simple days feel like stories worth keeping. I hope today gives you back a little
+                of the happiness you give everyone else.
+              </p>
+              <span class="letter-seal" aria-hidden="true"></span>
+            </article>
+            <article class="letter-card">
+              <span class="letter-stamp">02</span>
+              <h3>For Your Year,</h3>
+              <p>
+                May it be full of soft mornings, loud laughs, brave choices, and a smile and no regret 
+              </p>
+              <span class="letter-seal" aria-hidden="true"></span>
+            </article>
+            <article class="letter-card">
+              <span class="letter-stamp">03</span>
+              <h3>Always,</h3>
+              <p>
+                I am proud of you, grateful for you, and very lucky that life put us on the same team.
+                Happy birthday.
+              </p>
+              <span class="letter-seal" aria-hidden="true"></span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" id="memories" data-section="media" aria-labelledby="memories-title">
+        <div class="band-inner">
+          <p class="section-kicker">Photo collage</p>
+          <h2 id="memories-title">A retro wall of tiny memories.</h2>
+          <p class="section-lead">
+            Pick a frame from the collage or open the menu for photos and videos.
+          </p>
+
+          <div class="memory-board">
+            <div class="photo-collage" id="photoCollage" aria-label="Birthday photo collage"></div>
+
+            <aside class="media-control-panel" aria-labelledby="media-menu-title">
+              <p class="section-kicker">Memory menu</p>
+              <h3 id="media-menu-title">Photos and videos</h3>
+              <p>
+                Add your files to the assets/photos and assets/videos folders using the exact filenames listed below.
+                The collage will use those files when the site is hosted on GitHub Pages.
+              </p>
+              
+              <details class="media-dropdown" id="mediaDropdown">
+                <summary>Open photo and video selection</summary>
+                <div class="media-menu-list" id="mediaMenuList"></div>
+              </details>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" id="gift" data-section="gift" aria-labelledby="gift-title">
+        <div class="band-inner">
+          <div class="tool-panel">
+            <div>
+              <p class="section-kicker">Gift reveal</p>
+              <h2 id="gift-title">A pocket-sized present.</h2>
+              <p class="section-lead">
+                Wrapped in retro colors, opened with one tap, and kept deliberately light so the page stays quick.
+              </p>
+            </div>
+            <div class="gift-stage">
+              <button class="gift-button" id="giftButton" type="button" aria-expanded="false" aria-controls="giftMessage">
+                <span class="gift-knot"></span>
+                <span class="gift-lid"></span>
+                <span class="gift-box"></span>
+                <span class="gift-ribbon"></span>
+                <span class="sr-only">Reveal the birthday gift</span>
+              </button>
+              <div class="reveal-card" id="giftMessage" role="status" hidden>
+                <h3>Your gift</h3>
+                <p class="gift-note">
+                  THANK YOU FOR LATE NIGHT CALLS AND CHATTING 
+                  THANKYOU FOR ALWAYS BEING THERE 
+                  THANKYOU FOR BEING PROTECTIVE(KNIFE)
+                  AND THANKYOU FOR SAVING ME 
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" id="secret" data-section="secret" aria-labelledby="secret-title">
+        <div class="band-inner">
+          <div class="tool-panel">
+            <div>
+              <p class="section-kicker">Secret message</p>
+              <h2 id="secret-title">A note hidden on Side B.</h2>
+              <p class="section-lead">
+                Some words are better saved for the person who knows the secret word.
+              </p>
+            </div>
+            <div>
+              <div class="secret-form">
+                <label class="field" for="secretCode">
+                  Secret word
+                  <input id="secretCode" type="text" inputmode="text" autocomplete="off" placeholder="jiya">
+                </label>
+                <button class="pill-button" id="unlockSecret" type="button">Unlock</button>
+              </div>
+              <p class="form-status" id="secretStatus" role="status" aria-live="polite"></p>
+              <div class="secret-reveal" id="secretReveal" hidden>
+                <h3>For you</h3>
+                <p>
+                  Bhaiiiii ukw u just think you are not worth or u ruin 
+                  u did not ruin mera and aayush ka 
+                  u did not ruin study partner ka 
+                  bhavya ?? 
+                  and like if 10 me se 2 are destroyed it dosent mean u ruined it 
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" id="guestbook" data-section="guestbook" aria-labelledby="guestbook-title">
+        <div class="band-inner">
+          <p class="section-kicker">Guestbook</p>
+          <h2 id="guestbook-title">Leave a birthday wish.</h2>
+          <p class="section-lead">
+            Leave a wish here for everyone to see. Messages are shared through the birthday guestbook.
+          </p>
+
+          <div class="guestbook-layout">
+            <form class="guestbook-form" id="guestbookForm">
+              <label class="field" for="guestName">
+                Name
+                <input id="guestName" name="guestName" type="text" maxlength="40" required>
+              </label>
+              <label class="field" for="guestMessage">
+                Message
+                <textarea id="guestMessage" name="guestMessage" maxlength="220" required></textarea>
+              </label>
+              <button class="pill-button" type="submit">Sign guestbook</button>
+              <p class="form-status" id="guestbookStatus" role="status" aria-live="polite"></p>
+            </form>
+
+            <div class="guestbook-feed" aria-live="polite">
+              <div class="guestbook-topline">
+                <span>Birthday wishes</span>
+                <span class="entry-count" id="entryCount">0</span>
+              </div>
+              <ul class="guestbook-list" id="guestbookList"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="media-viewer" id="mediaViewer" aria-labelledby="mediaViewerTitle">
+      <div class="viewer-topline">
+        <h3 id="mediaViewerTitle">Memory</h3>
+        <button class="mini-button" id="closeMediaViewer" type="button">Close</button>
+      </div>
+      <div class="viewer-body" id="mediaViewerBody"></div>
+      <div class="viewer-actions">
+        <button class="pill-button" id="mediaDownload" type="button">Download</button>
+      </div>
+    </dialog>
+
+    <footer class="site-footer">
+      <p>Made with love, old-school colors, and a fast little heartbeat.</p>
+    </footer>
+  </div>
+
+  <!-- Supabase client + public project configuration.
+       Replace both placeholders with your Supabase Project URL and anon/publishable key.
+       Never put a service_role/secret key in a public website. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.RETRO_BIRTHDAY_SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+    window.RETRO_BIRTHDAY_SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+  </script>
+  <script>
+    (() => {
+      const storageKey = "retroBirthdayGuestbookEntries";
+      const themeStorageKey = "retroBirthdayTheme";
+      const defaultEntries = [
+        {
+          name: "Your biggest fan",
+          message: "Happy birthday to the sister who makes every memory feel like a favorite song."
+        },
+        {
+          name: "Family playlist",
+          message: "Wishing you a year full of bright mornings, easy laughter, and dreams that actually happen."
+        }
+      ];
+
+      const colors = ["#ff6f61", "#16b7a4", "#f6c445", "#f8a5c2", "#a7f3d0", "#3b5bdb"];
+      const mediaObjectUrls = [];
+      const birthdayMelody = [
+        [392, 0.16], [392, 0.16], [440, 0.28], [392, 0.28], [523.25, 0.28], [493.88, 0.5],
+        [392, 0.16], [392, 0.16], [440, 0.28], [392, 0.28], [587.33, 0.28], [523.25, 0.5],
+        [392, 0.16], [392, 0.16], [783.99, 0.28], [659.25, 0.28], [523.25, 0.28], [493.88, 0.28], [440, 0.58],
+        [698.46, 0.16], [698.46, 0.16], [659.25, 0.28], [523.25, 0.28], [587.33, 0.28], [523.25, 0.72]
+      ];
+      let selectedMediaItem = null;
+      let audioContext = null;
+      let masterGain = null;
+      let melodyTimer = null;
+      let melodyIndex = 0;
+      let activeMusicMode = "upload";
+      let uploadedSongUrl = null;
+
+      function svgData(title, subtitle, bg, accent, detail) {
+        const svg = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="960" height="680" viewBox="0 0 960 680">
+            <rect width="960" height="680" fill="${bg}"/>
+            <path d="M0 510 C180 460 270 600 420 530 S690 470 960 540 V680 H0 Z" fill="${accent}" opacity="0.9"/>
+            <circle cx="760" cy="144" r="86" fill="#f6c445" stroke="#201722" stroke-width="14"/>
+            <g fill="none" stroke="#201722" stroke-width="10" opacity="0.28">
+              <path d="M80 90 H880"/>
+              <path d="M80 160 H880"/>
+              <path d="M80 230 H880"/>
+              <path d="M80 300 H880"/>
+            </g>
+            <g transform="translate(94 360)">
+              <rect x="0" y="0" width="530" height="172" rx="16" fill="#fff7df" stroke="#201722" stroke-width="12"/>
+              <text x="32" y="72" font-family="Georgia, serif" font-size="48" font-weight="700" fill="#201722">${title}</text>
+              <text x="34" y="126" font-family="Trebuchet MS, Arial, sans-serif" font-size="28" fill="#201722">${subtitle}</text>
+            </g>
+            <text x="808" y="592" text-anchor="middle" font-family="Trebuchet MS, Arial, sans-serif" font-size="30" font-weight="800" fill="#201722">${detail}</text>
+          </svg>
+        `;
+        return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+      }
+
+      const builtInMediaItems = [
+        {
+          id: "photo-01",
+          type: "photo",
+          title: "Favourite Memory",
+          description: "Add your first photo as assets/photos/photo-01.jpg.",
+          src: "assets/photos/photo-01.jpg",
+          downloadName: "photo-01.jpg"
+        },
+        {
+          id: "photo-02",
+          type: "photo",
+          title: "A Happy Day",
+          description: "Add your second photo as assets/photos/photo-02.jpg.",
+          src: "assets/photos/photo-02.jpg",
+          downloadName: "photo-02.jpg"
+        },
+        {
+          id: "photo-03",
+          type: "photo",
+          title: "Silly Moments",
+          description: "Add your third photo as assets/photos/photo-03.jpg.",
+          src: "assets/photos/photo-03.jpg",
+          downloadName: "photo-03.jpg"
+        },
+        {
+          id: "photo-04",
+          type: "photo",
+          title: "One for the Album",
+          description: "Add your fourth photo as assets/photos/photo-04.jpg.",
+          src: "assets/photos/photo-04.jpg",
+          downloadName: "photo-04.jpg"
+        },
+        {
+          id: "video-01",
+          type: "video",
+          title: "Birthday Video",
+          description: "Add a video as assets/videos/video-01.mp4.",
+          src: "assets/videos/video-01.mp4",
+          poster: "assets/photos/photo-01.jpg",
+          downloadName: "video-01.mp4"
+        },
+        {
+          id: "video-02",
+          type: "video",
+          title: "Another Memory",
+          description: "Add a second video as assets/videos/video-02.mp4.",
+          src: "assets/videos/video-02.mp4",
+          poster: "assets/photos/photo-02.jpg",
+          downloadName: "video-02.mp4"
+        }
+      ];
+
+      let activeMediaItems = [...builtInMediaItems];
+      let entries = loadEntries();
+
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const supabaseConfig = {
+        url: window.RETRO_BIRTHDAY_SUPABASE_URL || "",
+        anonKey: window.RETRO_BIRTHDAY_SUPABASE_ANON_KEY || ""
+      };
+      let supabaseClient = null;
+      let guestbookCloudReady = false;
+
+      function initSupabaseClient() {
+        const configured = supabaseConfig.url &&
+          supabaseConfig.anonKey &&
+          !supabaseConfig.url.includes("YOUR_SUPABASE") &&
+          !supabaseConfig.anonKey.includes("YOUR_SUPABASE");
+        if (!configured || !window.supabase || !window.supabase.createClient) return false;
+        try {
+          supabaseClient = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
+          return true;
+        } catch (error) {
+          console.error("Supabase initialization failed:", error);
+          return false;
+        }
+      }
+
+      async function loadCloudGuestbook() {
+        const status = $("#guestbookStatus");
+        if (!supabaseClient) {
+          if (status) status.textContent = "Cloud guestbook needs your Supabase project URL and anon key.";
+          renderGuestbook();
+          return false;
+        }
+        try {
+          const { data, error } = await supabaseClient
+            .from("birthday_guestbook")
+            .select("id, name, message, created_at")
+            .order("created_at", { ascending: false })
+            .limit(50);
+          if (error) throw error;
+          entries = (data || []).map((row) => ({ name: row.name, message: row.message }));
+          guestbookCloudReady = true;
+          renderGuestbook();
+          if (status) status.textContent = "Connected — wishes are shared with everyone visiting this page.";
+          return true;
+        } catch (error) {
+          console.error("Could not load guestbook:", error);
+          if (status) status.textContent = "Couldn't load shared wishes. Check your Supabase table and Row Level Security policies.";
+          renderGuestbook();
+          return false;
+        }
+      }
+
+      async function submitCloudGuestbook(name, message) {
+        const status = $("#guestbookStatus");
+        if (!supabaseClient) {
+          if (status) status.textContent = "Connect Supabase first: add your project URL and anon key in the configuration near the top of this file.";
+          return false;
+        }
+        try {
+          const { error } = await supabaseClient
+            .from("birthday_guestbook")
+            .insert({ name, message });
+          if (error) throw error;
+          await loadCloudGuestbook();
+          if (status) status.textContent = "Signed! Your wish is now saved for everyone to see.";
+          return true;
+        } catch (error) {
+          console.error("Could not save guestbook entry:", error);
+          if (status) status.textContent = "Couldn't save your wish. Check the Supabase table and insert policy.";
+          return false;
+        }
+      }
+
+
+      function getInitialTheme() {
+        try {
+          const savedTheme = window.localStorage.getItem(themeStorageKey);
+          if (savedTheme === "dark" || savedTheme === "light") return savedTheme;
+        } catch (error) {
+          return document.documentElement.dataset.theme || "light";
+        }
+
+        return document.documentElement.dataset.theme ||
+          (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      }
+
+      function applyTheme(theme, shouldSave = true) {
+        const nextTheme = theme === "dark" ? "dark" : "light";
+        const toggle = $("#themeToggle");
+        const toggleText = $("#themeToggleText");
+
+        document.documentElement.dataset.theme = nextTheme;
+        document.documentElement.style.colorScheme = nextTheme;
+
+        if (toggle) {
+          const isDark = nextTheme === "dark";
+          toggle.setAttribute("aria-pressed", String(isDark));
+          toggle.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme");
+        }
+
+        if (toggleText) {
+          toggleText.textContent = nextTheme === "dark" ? "Light" : "Dark";
+        }
+
+        if (shouldSave) {
+          try {
+            window.localStorage.setItem(themeStorageKey, nextTheme);
+          } catch (error) {
+            return nextTheme;
+          }
+        }
+
+        return nextTheme;
+      }
+
+      function toggleTheme() {
+        const currentTheme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+        return applyTheme(currentTheme === "dark" ? "light" : "dark");
+      }
+
+      function loadEntries() {
+        try {
+          const saved = window.localStorage.getItem(storageKey);
+          if (!saved) return [...defaultEntries];
+          const parsed = JSON.parse(saved);
+          return Array.isArray(parsed) && parsed.length ? parsed : [...defaultEntries];
+        } catch (error) {
+          return [...defaultEntries];
+        }
+      }
+
+      function saveEntries() {
+        try {
+          window.localStorage.setItem(storageKey, JSON.stringify(entries));
+        } catch (error) {
+          return false;
+        }
+        return true;
+      }
+
+      function renderGuestbook() {
+        const list = $("#guestbookList");
+        const count = $("#entryCount");
+        if (!list || !count) return;
+
+        list.innerHTML = "";
+        entries.forEach((entry) => {
+          const item = document.createElement("li");
+          item.className = "guestbook-entry";
+
+          const name = document.createElement("strong");
+          name.textContent = entry.name;
+
+          const message = document.createElement("p");
+          message.textContent = entry.message;
+
+          item.append(name, message);
+          list.appendChild(item);
+        });
+
+        count.textContent = String(entries.length);
+      }
+
+      function addEntry(name, message) {
+        entries = [{ name, message }, ...entries].slice(0, 12);
+        saveEntries();
+        renderGuestbook();
+      }
+
+      function launchTinyBurst(stage) {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+        const burst = document.createElement("div");
+        burst.className = "burst";
+
+        for (let index = 0; index < 16; index += 1) {
+          const particle = document.createElement("span");
+          particle.style.setProperty("--angle", `${index * 22.5}deg`);
+          particle.style.setProperty("--burst-color", colors[index % colors.length]);
+          burst.appendChild(particle);
+        }
+
+        stage.appendChild(burst);
+        window.setTimeout(() => burst.remove(), 820);
+      }
+
+      function revealGift() {
+        const button = $("#giftButton");
+        const message = $("#giftMessage");
+        const stage = button ? button.closest(".gift-stage") : null;
+        if (!button || !message || !stage) return false;
+
+        button.setAttribute("aria-expanded", "true");
+        message.hidden = false;
+        launchTinyBurst(stage);
+        return true;
+      }
+
+      function unlockSecret() {
+        const input = $("#secretCode");
+        const reveal = $("#secretReveal");
+        const status = $("#secretStatus");
+        if (!input || !reveal || !status) return false;
+
+        const answer = input.value.trim().toLowerCase();
+        const accepted = ["jiya"];
+        if (accepted.includes(answer)) {
+          reveal.hidden = false;
+          status.textContent = "Unlocked.";
+          return true;
+        }
+
+          reveal.hidden = true;
+          status.textContent = "Try the birthday name tucked into this page.";
+        return false;
+      }
+
+      function wireGuestbook() {
+        const form = $("#guestbookForm");
+        const status = $("#guestbookStatus");
+        if (!form || !status) return;
+
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const nameInput = $("#guestName");
+          const messageInput = $("#guestMessage");
+          const name = nameInput.value.trim();
+          const message = messageInput.value.trim();
+
+          if (!name || !message) {
+            status.textContent = "Add your name and a wish first.";
+            return;
+          }
+          if (name.length > 40 || message.length > 220) {
+            status.textContent = "Name must be 40 characters or less; message must be 220 or less.";
+            return;
+          }
+
+          const submitButton = form.querySelector('button[type="submit"]');
+          if (submitButton) submitButton.disabled = true;
+          status.textContent = "Saving your wish…";
+          const saved = await submitCloudGuestbook(name, message);
+          if (saved) form.reset();
+          if (submitButton) submitButton.disabled = false;
+        });
+      }
+
+      function mediaPreviewFor(item) {
+        return item.type === "video" ? item.poster : item.src;
+      }
+
+      function renderMedia() {
+        const collage = $("#photoCollage");
+        const menu = $("#mediaMenuList");
+        if (!collage || !menu) return;
+
+        collage.innerHTML = "";
+        menu.innerHTML = "";
+
+        activeMediaItems.slice(0, 4).forEach((item) => {
+          const frame = document.createElement("article");
+          frame.className = `collage-frame ${item.type === "video" ? "video" : "photo"}`;
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.setAttribute("aria-label", `${item.type === "video" ? "Play" : "View"} ${item.title}`);
+          button.addEventListener("click", () => openMediaItem(item.id));
+
+          const image = document.createElement("img");
+          image.src = mediaPreviewFor(item);
+          image.alt = item.title;
+
+          const caption = document.createElement("span");
+          caption.className = "collage-caption";
+          caption.textContent = item.title;
+
+          button.appendChild(image);
+          frame.append(button, caption);
+          collage.appendChild(frame);
+        });
+
+        activeMediaItems.forEach((item) => {
+          const row = document.createElement("article");
+          row.className = "media-item";
+
+          const thumb = document.createElement("img");
+          thumb.className = "media-thumb";
+          thumb.src = mediaPreviewFor(item);
+          thumb.alt = item.title;
+
+          const copy = document.createElement("div");
+          copy.className = "media-copy";
+
+          const title = document.createElement("strong");
+          title.textContent = item.title;
+
+          const description = document.createElement("span");
+          description.textContent = item.description;
+
+          const actions = document.createElement("div");
+          actions.className = "media-item-actions";
+
+          const viewButton = document.createElement("button");
+          viewButton.className = "mini-button";
+          viewButton.type = "button";
+          viewButton.textContent = item.type === "video" ? "Play" : "View";
+          viewButton.addEventListener("click", () => openMediaItem(item.id));
+
+          const downloadButton = document.createElement("button");
+          downloadButton.className = "mini-button";
+          downloadButton.type = "button";
+          downloadButton.textContent = "Download";
+          downloadButton.addEventListener("click", () => downloadMediaItem(item.id));
+
+          actions.append(viewButton, downloadButton);
+          copy.append(title, description, actions);
+          row.append(thumb, copy);
+          menu.appendChild(row);
+        });
+      }
+
+      function findMediaItem(id) {
+        return activeMediaItems.find((item) => item.id === id);
+      }
+
+      function getDownloadName(item) {
+        return item.downloadName || `${item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.${item.type === "video" ? "webm" : "svg"}`;
+      }
+
+      function triggerDownload(url, name) {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = name;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+
+      async function getMediaUrl(item) {
+        if (item.type !== "video") return item.src;
+        if (item.src) return item.src;
+        if (item.generatedUrl) return item.generatedUrl;
+
+        item.generatedUrl = await createRetroVideo(item);
+        mediaObjectUrls.push(item.generatedUrl);
+        return item.generatedUrl;
+      }
+
+      async function openMediaItem(id) {
+        const item = findMediaItem(id);
+        const dialog = $("#mediaViewer");
+        const title = $("#mediaViewerTitle");
+        const body = $("#mediaViewerBody");
+        if (!item || !dialog || !title || !body) return;
+
+        selectedMediaItem = item;
+        title.textContent = item.title;
+        body.innerHTML = "";
+
+        const showDialog = () => {
+          if (typeof dialog.showModal === "function" && !dialog.open) {
+            dialog.showModal();
+          } else {
+            dialog.setAttribute("open", "");
+          }
+        };
+
+        if (item.type === "photo") {
+          const image = document.createElement("img");
+          image.src = item.src;
+          image.alt = item.title;
+          body.appendChild(image);
+          showDialog();
+        } else {
+          const loading = document.createElement("p");
+          loading.textContent = "Preparing the clip...";
+          body.appendChild(loading);
+          showDialog();
+
+          try {
+            const src = await getMediaUrl(item);
+            body.innerHTML = "";
+            const video = document.createElement("video");
+            video.src = src;
+            video.poster = item.poster || "";
+            video.controls = true;
+            video.playsInline = true;
+            video.preload = "metadata";
+            body.appendChild(video);
+            video.play().catch(() => {});
+          } catch (error) {
+            loading.textContent = "This browser could not prepare the video clip.";
+          }
+        }
+      }
+
+      async function downloadMediaItem(id) {
+        const item = findMediaItem(id);
+        if (!item) return;
+        const url = await getMediaUrl(item);
+        triggerDownload(url, getDownloadName(item));
+      }
+
+      function createRetroVideo(item) {
+        return new Promise((resolve, reject) => {
+          if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
+            reject(new Error("Video recording is not supported"));
+            return;
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = 720;
+          canvas.height = 404;
+          const context = canvas.getContext("2d");
+          const stream = canvas.captureStream(18);
+          const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+            ? "video/webm;codecs=vp9"
+            : "video/webm";
+          const recorder = new MediaRecorder(stream, { mimeType });
+          const chunks = [];
+          const totalFrames = 54;
+          let frame = 0;
+
+          recorder.ondataavailable = (event) => {
+            if (event.data && event.data.size) chunks.push(event.data);
+          };
+
+          recorder.onerror = () => reject(new Error("Could not record clip"));
+          recorder.onstop = () => {
+            const blob = new Blob(chunks, { type: "video/webm" });
+            resolve(URL.createObjectURL(blob));
+          };
+
+          function draw() {
+            const progress = frame / totalFrames;
+            context.fillStyle = item.videoKind === "lights" ? "#16111f" : "#fff7df";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let index = 0; index < 14; index += 1) {
+              const x = (index * 74 + progress * 180) % (canvas.width + 80) - 40;
+              const y = 40 + Math.sin(progress * 8 + index) * 28 + index * 22;
+              context.fillStyle = colors[index % colors.length];
+              context.strokeStyle = "#201722";
+              context.lineWidth = 5;
+              context.beginPath();
+              context.arc(x, y, 20 + (index % 3) * 4, 0, Math.PI * 2);
+              context.fill();
+              context.stroke();
+            }
+
+            context.fillStyle = "#201722";
+            context.fillRect(58, 258, 604, 96);
+            context.fillStyle = "#fff7df";
+            context.font = "700 44px Georgia, serif";
+            context.fillText(item.title, 84, 318);
+            context.font = "700 22px Trebuchet MS, Arial, sans-serif";
+            context.fillText("Happy birthday, Sis", 88, 348);
+
+            frame += 1;
+            if (frame <= totalFrames) {
+              window.requestAnimationFrame(draw);
+            } else {
+              recorder.stop();
+            }
+          }
+
+          recorder.start();
+          draw();
+        });
+      }
+
+      function wireMediaControls() {
+        const upload = $("#mediaUpload");
+        const closeButton = $("#closeMediaViewer");
+        const downloadButton = $("#mediaDownload");
+        const dialog = $("#mediaViewer");
+
+        if (upload) {
+          upload.addEventListener("change", () => {
+            const files = Array.from(upload.files || []).filter((file) => file.type.startsWith("image/") || file.type.startsWith("video/"));
+            const uploadedItems = files.map((file, index) => {
+              const url = URL.createObjectURL(file);
+              mediaObjectUrls.push(url);
+              const isVideo = file.type.startsWith("video/");
+              return {
+                id: `upload-${Date.now()}-${index}`,
+                type: isVideo ? "video" : "photo",
+                title: file.name.replace(/\.[^.]+$/, ""),
+                description: isVideo ? "Video added from this device." : "Photo added from this device.",
+                src: url,
+                poster: isVideo ? svgData("Your Video", file.name, "#3b5bdb", "#f6c445", "VIDEO") : url,
+                downloadName: file.name
+              };
+            });
+
+            if (uploadedItems.length) {
+              activeMediaItems = [...uploadedItems, ...builtInMediaItems];
+              renderMedia();
+            }
+          });
+        }
+
+        if (closeButton && dialog) {
+          closeButton.addEventListener("click", () => {
+            if (typeof dialog.close === "function") {
+              dialog.close();
+            } else {
+              dialog.removeAttribute("open");
+            }
+          });
+        }
+
+        if (downloadButton) {
+          downloadButton.addEventListener("click", () => {
+            if (selectedMediaItem) downloadMediaItem(selectedMediaItem.id);
+          });
+        }
+
+        window.addEventListener("beforeunload", () => {
+          mediaObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+        });
+      }
+
+      function setMusicStatus(message) {
+        const status = $("#musicStatus");
+        if (status) status.textContent = message;
+      }
+
+      function setMusicPlaying(isPlaying) {
+        const toggle = $("#musicToggle");
+        document.body.dataset.music = isPlaying ? "playing" : "paused";
+        if (toggle) {
+          toggle.textContent = isPlaying ? "Pause music" : "Play music";
+          toggle.setAttribute("aria-pressed", String(isPlaying));
+        }
+      }
+
+      function getMusicVolume() {
+        const volume = $("#musicVolume");
+        return volume ? Number(volume.value) : 0.55;
+      }
+
+      function applyMusicVolume() {
+        const value = getMusicVolume();
+        const uploadedAudio = $("#uploadedAudio");
+        if (masterGain) masterGain.gain.value = value * 0.42;
+        if (uploadedAudio) uploadedAudio.volume = value;
+      }
+
+      function ensureAudioContext() {
+        if (!audioContext) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return null;
+          audioContext = new AudioContextClass();
+          masterGain = audioContext.createGain();
+          masterGain.gain.value = getMusicVolume() * 0.42;
+          masterGain.connect(audioContext.destination);
+        }
+
+        if (audioContext.state === "suspended") {
+          audioContext.resume();
+        }
+
+        return audioContext;
+      }
+
+      function playSynthNote(frequency, duration) {
+        const context = ensureAudioContext();
+        if (!context || !masterGain) return;
+
+        const start = context.currentTime;
+        const oscillator = context.createOscillator();
+        const toneGain = context.createGain();
+
+        oscillator.type = "triangle";
+        oscillator.frequency.setValueAtTime(frequency, start);
+        toneGain.gain.setValueAtTime(0.0001, start);
+        toneGain.gain.exponentialRampToValueAtTime(0.72, start + 0.018);
+        toneGain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+        oscillator.connect(toneGain);
+        toneGain.connect(masterGain);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.04);
+      }
+
+      function stopBuiltInMusic() {
+        if (melodyTimer) {
+          window.clearTimeout(melodyTimer);
+          melodyTimer = null;
+        }
+      }
+
+      function queueNextMelodyNote() {
+        stopBuiltInMusic();
+        const [frequency, duration] = birthdayMelody[melodyIndex % birthdayMelody.length];
+        playSynthNote(frequency, duration);
+        melodyIndex += 1;
+        melodyTimer = window.setTimeout(queueNextMelodyNote, Math.max(170, duration * 1000 + 72));
+      }
+
+      async function startBuiltInMusic() {
+        const uploadedAudio = $("#uploadedAudio");
+        if (uploadedAudio) uploadedAudio.pause();
+
+        const context = ensureAudioContext();
+        if (!context) {
+          setMusicStatus("This browser cannot start the built-in tune.");
+          return false;
+        }
+
+        activeMusicMode = "builtin";
+        queueNextMelodyNote();
+        setMusicPlaying(true);
+        setMusicStatus("Playing the built-in retro birthday tune.");
+        return true;
+      }
+
+      async function startUploadedMusic() {
+        const uploadedAudio = $("#uploadedAudio");
+        if (!uploadedAudio || !uploadedAudio.src) return startBuiltInMusic();
+
+        stopBuiltInMusic();
+        activeMusicMode = "upload";
+        applyMusicVolume();
+
+        try {
+          await uploadedAudio.play();
+          setMusicPlaying(true);
+          setMusicStatus("Playing your loaded song.");
+          return true;
+        } catch (error) {
+          setMusicPlaying(false);
+          setMusicStatus("The browser blocked or could not play that audio file.");
+          return false;
+        }
+      }
+
+      function pauseMusic() {
+        const uploadedAudio = $("#uploadedAudio");
+        stopBuiltInMusic();
+        if (uploadedAudio) uploadedAudio.pause();
+        setMusicPlaying(false);
+        setMusicStatus(activeMusicMode === "upload" ? "Song paused." : "Built-in tune paused.");
+      }
+
+      function stopMusic() {
+        const uploadedAudio = $("#uploadedAudio");
+        stopBuiltInMusic();
+        melodyIndex = 0;
+        if (uploadedAudio) {
+          uploadedAudio.pause();
+          uploadedAudio.currentTime = 0;
+        }
+        setMusicPlaying(false);
+        setMusicStatus(activeMusicMode === "upload" ? "Song stopped." : "Built-in tune ready.");
+      }
+
+      function toggleMusic() {
+        const isPlaying = document.body.dataset.music === "playing";
+        if (isPlaying) {
+          pauseMusic();
+          return;
+        }
+
+        if (activeMusicMode === "upload") {
+          startUploadedMusic();
+        } else {
+          startBuiltInMusic();
+        }
+      }
+
+      function wireMusicControls() {
+        const toggle = $("#musicToggle");
+        const stop = $("#musicStop");
+        const upload = $("#musicUpload");
+        const volume = $("#musicVolume");
+        const uploadedAudio = $("#uploadedAudio");
+
+        if (uploadedAudio && uploadedAudio.getAttribute("src")) {
+          activeMusicMode = "upload";
+          setMusicStatus("Birthday song loaded. Press play to start the radio.");
+        }
+
+        setMusicPlaying(false);
+        applyMusicVolume();
+
+        if (toggle) {
+          toggle.addEventListener("click", toggleMusic);
+        }
+
+        if (stop) {
+          stop.addEventListener("click", stopMusic);
+        }
+
+        if (volume) {
+          volume.addEventListener("input", applyMusicVolume);
+        }
+
+        if (uploadedAudio) {
+          uploadedAudio.addEventListener("ended", () => {
+            setMusicPlaying(false);
+            setMusicStatus("Song finished.");
+          });
+        }
+
+        if (upload) {
+          upload.addEventListener("change", () => {
+            const file = upload.files && upload.files[0];
+            if (!file) return;
+
+            if (uploadedSongUrl) {
+              URL.revokeObjectURL(uploadedSongUrl);
+            }
+
+            uploadedSongUrl = URL.createObjectURL(file);
+            if (uploadedAudio) {
+              uploadedAudio.src = uploadedSongUrl;
+              uploadedAudio.load();
+            }
+            activeMusicMode = "upload";
+            stopBuiltInMusic();
+            setMusicPlaying(false);
+            setMusicStatus(`${file.name} loaded. Press play to hear it.`);
+          });
+        }
+
+        window.addEventListener("beforeunload", () => {
+          if (uploadedSongUrl) URL.revokeObjectURL(uploadedSongUrl);
+        });
+      }
+
+      function runSmokeTest() {
+        const originalEntries = [...entries];
+        let originalStorage = null;
+        let originalThemeStorage = null;
+        const originalTheme = document.documentElement.dataset.theme || getInitialTheme();
+        try {
+          originalStorage = window.localStorage.getItem(storageKey);
+          originalThemeStorage = window.localStorage.getItem(themeStorageKey);
+        } catch (error) {
+          originalStorage = null;
+          originalThemeStorage = null;
+        }
+
+        const giftPassed = revealGift();
+
+        applyTheme("light", false);
+        const themePassed = toggleTheme() === "dark" &&
+          document.documentElement.dataset.theme === "dark" &&
+          $("#themeToggle") &&
+          $("#themeToggle").getAttribute("aria-pressed") === "true";
+
+        const secretInput = $("#secretCode");
+        if (secretInput) secretInput.value = "jiya";
+        const secretPassed = unlockSecret();
+
+        const form = $("#guestbookForm");
+        const nameInput = $("#guestName");
+        const messageInput = $("#guestMessage");
+        if (nameInput) nameInput.value = "Smoke Test";
+        if (messageInput) messageInput.value = "Happy birthday from the test runner.";
+        if (form) form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+
+        const guestbookPassed = entries.some((entry) => entry.name === "Smoke Test");
+        const mediaPassed = Boolean($("#photoCollage") && $("#mediaMenuList") &&
+          $("#photoCollage").children.length >= 4 &&
+          $("#mediaMenuList").children.length >= builtInMediaItems.length);
+        const musicPassed = Boolean($("#musicToggle") && $("#musicStop") && $("#musicUpload") && $("#uploadedAudio"));
+        const unexpectedMediaSections = document.querySelectorAll("section.media-wall, section.memory-burst, section.drag-wall").length === 0;
+        const passed = Boolean(giftPassed && themePassed && secretPassed && guestbookPassed && mediaPassed && musicPassed && unexpectedMediaSections);
+
+        entries = originalEntries;
+        try {
+          if (originalStorage === null) {
+            window.localStorage.removeItem(storageKey);
+          } else {
+            window.localStorage.setItem(storageKey, originalStorage);
+          }
+
+          if (originalThemeStorage === null) {
+            window.localStorage.removeItem(themeStorageKey);
+          } else {
+            window.localStorage.setItem(themeStorageKey, originalThemeStorage);
+          }
+        } catch (error) {
+          return passed;
+        } finally {
+          applyTheme(originalTheme, false);
+          renderGuestbook();
+        }
+
+        const meta = document.createElement("meta");
+        meta.name = "retro-smoke";
+        meta.content = passed ? "passed" : "failed";
+        document.head.appendChild(meta);
+        document.body.dataset.smoke = meta.content;
+        return passed;
+      }
+
+      function init() {
+        const giftButton = $("#giftButton");
+        const secretButton = $("#unlockSecret");
+        const secretInput = $("#secretCode");
+        const themeButton = $("#themeToggle");
+
+        applyTheme(getInitialTheme(), false);
+
+        if (giftButton) {
+          giftButton.addEventListener("click", revealGift);
+        }
+
+        if (themeButton) {
+          themeButton.addEventListener("click", toggleTheme);
+        }
+
+        if (secretButton) {
+          secretButton.addEventListener("click", unlockSecret);
+        }
+
+        if (secretInput) {
+          secretInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              unlockSecret();
+            }
+          });
+        }
+
+        initSupabaseClient();
+        wireGuestbook();
+        wireMediaControls();
+        wireMusicControls();
+        renderGuestbook();
+        renderMedia();
+        loadCloudGuestbook();
+
+        window.retroBirthdaySmokeTest = runSmokeTest;
+        if (new URLSearchParams(window.location.search).get("smoke") === "1") {
+          runSmokeTest();
+        }
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init, { once: true });
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
